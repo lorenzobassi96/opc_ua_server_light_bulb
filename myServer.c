@@ -210,20 +210,20 @@ int main(int argc, char * argv[]) {
 	
 	
     //add a variable
-    UA_VariableAttributes varAttr = UA_VariableAttributes_default;
-    UA_Int32 random_var = 0;
-    UA_Variant_setScalar(&varAttr.value, &random_var, &UA_TYPES[UA_TYPES_INT32]);
-    UA_Server_addVariableNode(server, UA_NODEID_STRING(1, "Random_Number"), UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER),
-		UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
-		UA_QUALIFIEDNAME(1, "Random_Number"),
-		UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), varAttr, NULL, NULL);
-
-    UA_StatusCode retval = UA_Server_run_startup(server);
-
-     if(retval != UA_STATUSCODE_GOOD){
-		UA_Server_delete(server);
-		return retval;
-     	}
+//    UA_VariableAttributes varAttr = UA_VariableAttributes_default;
+//    UA_Int32 random_var = 0;
+//    UA_Variant_setScalar(&varAttr.value, &random_var, &UA_TYPES[UA_TYPES_INT32]);
+//    UA_Server_addVariableNode(server, UA_NODEID_STRING(1, "Random_Number"), UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER),
+//		UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+//		UA_QUALIFIEDNAME(1, "Random_Number"),
+//		UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), varAttr, NULL, NULL);
+//
+//    UA_StatusCode retval = UA_Server_run_startup(server);
+//
+//     if(retval != UA_STATUSCODE_GOOD){
+//		UA_Server_delete(server);
+//		return retval;
+//     	}
 
 
   //    int timestamp = time(0) + 1;
@@ -245,9 +245,12 @@ int main(int argc, char * argv[]) {
 //       }
 
 
-       retval = UA_Server_run_shutdown(server);
+  //     retval = UA_Server_run_shutdown(server);
 
-
+    UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND, "starting server...");
+    UA_StatusCode retval = UA_Server_run(server, &running);
+    UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND, "Server was shut down");
+	
     UA_Server_delete(server);
     return retval == UA_STATUSCODE_GOOD ? EXIT_SUCCESS : EXIT_FAILURE;
 }
