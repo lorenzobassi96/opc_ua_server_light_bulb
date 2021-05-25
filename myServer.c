@@ -14,6 +14,42 @@ static void stopHandler(int sig) {
     running = false;
 }
 
+UA_Double Temperature = 20.0;
+
+static void
+beforeReadTemperature(UA_Server *server,
+               const UA_NodeId *sessionId, void *sessionContext,
+               const UA_NodeId *nodeid, void *nodeContext,
+               const UA_NumericRange *range, const UA_DataValue *data) {
+    float tmp = 1.0 * (rand()%100)/100 - 0.5;
+	Temperature += tmp;
+
+	UA_Variant value;
+    UA_Variant_setScalar(&value, &Temperature, &UA_TYPES[UA_TYPES_DOUBLE]);		//Copy the Temperature in a variant variable
+    UA_Server_writeValue(server, UA_NODEID_STRING(2, "R1_TS1_Temperature"), value);
+
+}
+
+static void
+afterWriteState(UA_Server *server,
+               const UA_NodeId *sessionId, void *sessionContext,
+               const UA_NodeId *nodeId, void *nodeContext,
+               const UA_NumericRange *range, const UA_DataValue *data) {
+    UA_Variant value;
+	UA_Boolean state;
+
+	UA_Server_readValue(server, UA_NODEID_STRING(2, "R1_LB1_State"), &value); 
+	state = *(UA_Boolean*) value.data;
+
+	if(state == true)
+		UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,
+                "The Light Bulb is now ON");
+	else
+		UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,
+                "The Light Bulb is now OFF");
+
+}
+
 int main(int argc, char * argv[]) {
     signal(SIGINT, stopHandler);
     signal(SIGTERM, stopHandler);
@@ -43,6 +79,103 @@ int main(int argc, char * argv[]) {
 
      }
 
+     //Add a new namespace to the server
+     UA_Int16 ns_room1 = UA_Server_addNamespace(server, "Room1");
+    UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND, "New Namespace added with Nr. %d", ns_room1);
+
+	//Add a new object called Temperature Sensor
+    UA_NodeId r1_tempsens_Id; /* get the nodeid assigned by the server */
+    UA_ObjectAttributes oAttr = UA_ObjectAttributes_default;
+    UA_Server_addObjectNode(server, UA_NODEID_STRING(2, "R1_TemperatureSensor"),
+                            UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER),
+                            UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
+                            UA_QUALIFIEDNAME(2, "Temperature Sensor"), UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE),
+                            oAttr, NULL, &r1_tempsens_Id);
+	
+	//Add the variable Vendor Name to server
+	UA_VariableAttributes vnAttr = UA_VariableAttributes_default;
+    UA_String vendorName = UA_STRING("Sensor King Ltd.");
+    UA_Variant_setScalar(&vnAttr.value, &vendorName, &UA_TYPES[UA_TYPES_STRING]);
+    UA_Server_addVariableNode(server, UA_NODEID_STRING(2, "R1_TS1_VendorName"), r1_tempsens_Id,
+                              UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+                              UA_QUALIFIEDNAME(2, "VendorName"),
+                              UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), vnAttr, NULL, NULL);
+
+
+	//Add the variable Serial Number to server
+	UA_VariableAttributes snAttr = UA_VariableAttributes_default;
+	UA_Int32 serialNumber = 12345678;
+    UA_Variant_setScalar(&snAttr.value, &serialNumber, &UA_TYPES[UA_TYPES_INT32]);
+    UA_Server_addVariableNode(server, UA_NODEID_STRING(2, "R1_TS1_SerialNumber"), r1_tempsens_Id,
+                              UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+                              UA_QUALIFIEDNAME(2, "SerialNumber"),
+                              UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), snAttr, NULL, NULL);
+	
+
+	//Add the variable Temperature to server
+	UA_VariableAttributes tpAttr = UA_VariableAttributes_default;
+    UA_Variant_setScalar(&tpAttr.value, &Temperature, &UA_TYPES[UA_TYPES_DOUBLE]);
+    UA_Server_addVariableNode(server, UA_NODEID_STRING(2, "R1_TS1_Temperature"), r1_tempsens_Id,
+                              UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+                              UA_QUALIFIEDNAME(2, "Temperature"),
+                              UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), tpAttr, NULL, NULL);
+
+	// Add Callback to Temperature Node
+    UA_ValueCallback callback ;
+    callback.onRead = beforeReadTemperature;
+    callback.onWrite = NULL;
+    UA_Server_setVariableNode_valueCallback(server, UA_NODEID_STRING(2, "R1_TS1_Temperature"), callback);
+	
+	//Add a new object called Light Bulb
+    UA_NodeId r1_lightbulb_Id; /* get the nodeid assigned by the server */
+    UA_ObjectAttributes o1Attr = UA_ObjectAttributes_default;
+    UA_Server_addObjectNode(server, UA_NODEID_STRING(2, "R1_LightBulb"),
+                            UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER),
+                            UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
+                            UA_QUALIFIEDNAME(2, "Light Bulb"), UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE),
+                            o1Attr, NULL, &r1_lightbulb_Id);
+	
+	//Add the variable Vendor Name to server
+	UA_VariableAttributes vn1Attr = UA_VariableAttributes_default;
+    UA_String vendorName1 = UA_STRING("BrightLight");
+    UA_Variant_setScalar(&vn1Attr.value, &vendorName1, &UA_TYPES[UA_TYPES_STRING]);
+    UA_Server_addVariableNode(server, UA_NODEID_STRING(2, "R1_LB1_VendorName"), r1_lightbulb_Id,
+                              UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+                              UA_QUALIFIEDNAME(2, "Vendor Name"),
+                              UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), vn1Attr, NULL, NULL);
+
+
+	//Add the variable Serial Number to server
+	UA_VariableAttributes sn1Attr = UA_VariableAttributes_default;
+	UA_Int32 serialNumber1 = 986543214;
+    UA_Variant_setScalar(&sn1Attr.value, &serialNumber1, &UA_TYPES[UA_TYPES_INT32]);
+    UA_Server_addVariableNode(server, UA_NODEID_STRING(2, "R1_LB1_SerialNumber"), r1_lightbulb_Id,
+                              UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+                              UA_QUALIFIEDNAME(2, "SerialNumber"),
+                              UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), sn1Attr, NULL, NULL);
+	
+	//Add the variable state to the lightbulb
+	UA_VariableAttributes stateAttr = UA_VariableAttributes_default;
+	UA_Boolean state = false;
+    UA_Variant_setScalar(&stateAttr.value, &state, &UA_TYPES[UA_TYPES_BOOLEAN]);
+	stateAttr.accessLevel = UA_ACCESSLEVELMASK_READ | UA_ACCESSLEVELMASK_WRITE;
+    UA_Server_addVariableNode(server, UA_NODEID_STRING(2, "R1_LB1_State"), r1_lightbulb_Id,
+                              UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+                              UA_QUALIFIEDNAME(2, "State of light bulb"),
+                              UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), stateAttr, NULL, NULL);
+	
+	//Add Callback to state of light bulb	
+    UA_ValueCallback callback1;
+    callback1.onRead = NULL;
+    callback1.onWrite = afterWriteState;
+    UA_Server_setVariableNode_valueCallback(server, UA_NODEID_STRING(2, "R1_LB1_State"), callback1);	
+	
+	
+	
+	
+	
+	
+	
     //add a variable
     UA_VariableAttributes varAttr = UA_VariableAttributes_default;
     UA_Int32 random_var = 0;
