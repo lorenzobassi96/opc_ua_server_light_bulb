@@ -42,11 +42,44 @@ afterWriteState(UA_Server *server,
 	state = *(UA_Boolean*) value.data;
 
 	if(state == true)
-		UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,
-                "The Light Bulb is now ON");
+	{
+		int timestamp = time(0) + 1;
+		while(state == true){
+		// Handle Server
+		UA_Server_run_iterate(server, true);
+
+		//Update the variable Node
+		if(time(0) > timestamp){
+			timestamp = time(0) + 1;
+			//UA_Variant value;
+			//random_var = rand();
+			UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,  "The Light Bulb is now ON");
+			//UA_Variant_setScalar(&value, &random_var, &UA_TYPES[UA_TYPES_INT32]);
+			//UA_Server_writeValue(server, UA_NODEID_STRING(1, "Random_Number"), value);
+		}
+
+               }
+	}
+	
 	else
-		UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,
-                "The Light Bulb is now OFF");
+	{	
+		int timestamp = time(0) + 1;
+		while(state == false){
+		// Handle Server
+		UA_Server_run_iterate(server, true);
+
+		//Update the variable Node
+		if(time(0) > timestamp){
+			timestamp = time(0) + 1;
+			//UA_Variant value;
+			//random_var = rand();
+			UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,  "The Light Bulb is now OFF");
+			//UA_Variant_setScalar(&value, &random_var, &UA_TYPES[UA_TYPES_INT32]);
+			//UA_Server_writeValue(server, UA_NODEID_STRING(1, "Random_Number"), value);
+		}
+
+               }
+	}	
 
 }
 
@@ -177,39 +210,39 @@ int main(int argc, char * argv[]) {
 	
 	
     //add a variable
-    UA_VariableAttributes varAttr = UA_VariableAttributes_default;
-    UA_Int32 random_var = 0;
-    UA_Variant_setScalar(&varAttr.value, &random_var, &UA_TYPES[UA_TYPES_INT32]);
-    UA_Server_addVariableNode(server, UA_NODEID_STRING(1, "Random_Number"), UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER),
-		UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
-		UA_QUALIFIEDNAME(1, "Random_Number"),
-		UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), varAttr, NULL, NULL);
+//    UA_VariableAttributes varAttr = UA_VariableAttributes_default;
+//    UA_Int32 random_var = 0;
+//    UA_Variant_setScalar(&varAttr.value, &random_var, &UA_TYPES[UA_TYPES_INT32]);
+//    UA_Server_addVariableNode(server, UA_NODEID_STRING(1, "Random_Number"), UA_NODEID_NUMERIC(0, UA_NS0ID_OBJECTSFOLDER),
+//		UA_NODEID_NUMERIC(0, UA_NS0ID_HASCOMPONENT),
+//		UA_QUALIFIEDNAME(1, "Random_Number"),
+//		UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), varAttr, NULL, NULL);
+//
+//    UA_StatusCode retval = UA_Server_run_startup(server);
 
-    UA_StatusCode retval = UA_Server_run_startup(server);
-
-     if(retval != UA_STATUSCODE_GOOD){
-		UA_Server_delete(server);
-		return retval;
-     	}
+//     if(retval != UA_STATUSCODE_GOOD){
+//		UA_Server_delete(server);
+//		return retval;
+ //    	}
 
 
-      int timestamp = time(0) + 1;
+  //    int timestamp = time(0) + 1;
 
-      while(running == true){
+   //   while(running == true){
 		// Handle Server
-		UA_Server_run_iterate(server, true);
+//		UA_Server_run_iterate(server, true);
 
 		//Update the variable Node
-		if(time(0) > timestamp){
-			timestamp = time(0) + 1;
-			UA_Variant value;
-			random_var = rand();
-			UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND, "New random number: %d", random_var);
-			UA_Variant_setScalar(&value, &random_var, &UA_TYPES[UA_TYPES_INT32]);
-			UA_Server_writeValue(server, UA_NODEID_STRING(1, "Random_Number"), value);
-		}
+//		if(time(0) > timestamp){
+//			timestamp = time(0) + 1;
+//			UA_Variant value;
+//			random_var = rand();
+//			UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND, "New random number: %d", random_var);
+//			UA_Variant_setScalar(&value, &random_var, &UA_TYPES[UA_TYPES_INT32]);
+//			UA_Server_writeValue(server, UA_NODEID_STRING(1, "Random_Number"), value);
+//		}
 
-       }
+//       }
 
 
        retval = UA_Server_run_shutdown(server);
