@@ -42,46 +42,15 @@ afterWriteState(UA_Server *server,
 	state = *(UA_Boolean*) value.data;
 
 	if(state == true)
-	{
-		int timestamp = time(0) + 1;
-		while(state == true){
-		// Handle Server
-		UA_Server_run_iterate(server, true);
-
-		//Update the variable Node
-		if(time(0) > timestamp){
-			timestamp = time(0) + 1;
-			//UA_Variant value;
-			//random_var = rand();
 			UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,  "The Light Bulb is now ON");
-			//UA_Variant_setScalar(&value, &random_var, &UA_TYPES[UA_TYPES_INT32]);
-			//UA_Server_writeValue(server, UA_NODEID_STRING(1, "Random_Number"), value);
-		}
-
-               }
-	}
+			
 	
 	else
-	{	
-		int timestamp = time(0) + 1;
-		while(state == false){
-		// Handle Server
-		UA_Server_run_iterate(server, true);
-
-		//Update the variable Node
-		if(time(0) > timestamp){
-			timestamp = time(0) + 1;
-			//UA_Variant value;
-			//random_var = rand();
 			UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,  "The Light Bulb is now OFF");
-			//UA_Variant_setScalar(&value, &random_var, &UA_TYPES[UA_TYPES_INT32]);
-			//UA_Server_writeValue(server, UA_NODEID_STRING(1, "Random_Number"), value);
+			
 		}
 
-               }
-	}	
-
-}
+    
 
 int main(int argc, char * argv[]) {
     signal(SIGINT, stopHandler);
